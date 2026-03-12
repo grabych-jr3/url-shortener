@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -28,11 +29,15 @@ public class UrlService {
 
     @Transactional
     public UrlDTOWithoutStats createUrl(UrlDTO urlDTO){
+        Optional<Url> existingUrl = urlRepository.findByUrl(urlDTO.getUrl());
+        if(existingUrl.isPresent()){
+            return convertTOUrlUrlDTOWithoutStats(existingUrl.get());
+        }
         Url url = new Url();
         url.setUrl(urlDTO.getUrl());
         url = urlRepository.save(url);
         url.setShortCode(Base62Encoding.encode(url.getId()));
-        urlRepository.save(enrichUrl(url));
+        enrichUrl(url);
         return convertTOUrlUrlDTOWithoutStats(url);
     }
 
